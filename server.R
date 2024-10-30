@@ -334,5 +334,55 @@ server <- function(input, output, session) {
     get_plotly_mdc10_focus(mdc10_table_focus(), select_dpcmst(), level_mdc2name, corlor_palette)
   })
   
+  ##############################################################################
+  
+  # 絞り込み条件をまとめたdfを作成する
+  rt_sidebar <- reactive({
+    tibble(
+      絞込条件 = c(
+        "注目病院",
+        "比較対象地方",
+        "比較対象都道府県",
+        "比較対象医療圏",
+        "比較対象市区町村",
+        "DPC絞込_大分類",
+        "DPC絞込_疾患分類",
+        "DPC絞込_手術分類"
+      ),
+      入力 = c(
+        input$input_hp,
+        input$input_tiho,
+        input$input_pref,
+        input$input_iryo,
+        input$input_city,
+        input$input_mdc2name,
+        input$input_mdc6name,
+        input$input_opename
+      )
+    )
+  })
+  
+  ##############################################################################
+
+  # データダウンロードのダウンロード機能
+  output$download_data <- downloadHandler(
+    filename = function(){
+      str_glue('DPC退院患者調査分析_{format(Sys.time(), "%Y%m%d_%H%M%S")}.xlsx')
+    },
+    content = function(file) {
+      list(
+        "絞込条件" = rt_sidebar(),
+        "病院別" = hp_table(),
+        "DPC大分類別(注目病院)" = mdc2_table_focus(),
+        "DPC大分類別" = mdc2_table(),
+        "DPC疾患分類別(注目病院)" = mdc6_table_focus(),
+        "DPC疾患分類別" = mdc6_table(),
+        "DPC手術分類別(注目病院)" = mdc10_table_focus(),
+        "DPC手術分類別" = mdc10_table()
+      ) %>%
+        writexl::write_xlsx(file)
+    }
+  )
+  ##############################################################################
 }
 

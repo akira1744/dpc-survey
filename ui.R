@@ -60,7 +60,9 @@ ui <-
             choices=list_opename,
             selected='全体'
           ),
-          
+          hr(style = "border: 1px solid gray;"),
+          h4('データダウンロード'),
+          downloadButton('download_data',label='Download'),
         ),
         # Tab1-mainpanel
         mainPanel(

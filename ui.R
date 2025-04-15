@@ -172,6 +172,9 @@ ui <-
             ),
             tabPanel(
               title='DPC大分類別',
+              # 検証用
+              # verbatimTextOutput("Rows"),
+              # verbatimTextOutput("MDC2"),
               DTOutput('dt_mdc2_table')
             ),
             tabPanel(

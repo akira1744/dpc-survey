@@ -23,9 +23,13 @@ mst_hp <- dbGetQuery(con,statement = "SELECT * FROM mst_hp") %>% tibble()
 
 # dpcmstを読み込み
 dpcmst <- dbGetQuery(con,statement = "SELECT * FROM dpcmst") %>% tibble()
+dpcmst
 
 mdc6cd_icd_with_time <- dbGetQuery(con,statement = 'SELECT * FROM mdc6cd_icd_with_time') %>% tibble()
-# mdc6cd_icd_with_time
+# mdc6cd_icd_with_time <- mdc6cd_icd_with_time %>% 
+#   mutate(`2018`=if_else(`2018`=='○',1,0)) %>% 
+#   mutate(`2020`=if_else(`2020`=='○',1,0)) %>% 
+#   mutate(`2022`=if_else(`2022`=='○',1,0))
 opecd_kcode_with_time <- dbGetQuery(con,statement = 'SELECT * FROM opecd_kcode_with_time') %>% tibble()
 # opecd_kcode_with_time
 

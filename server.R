@@ -579,7 +579,7 @@ server <- function(input, output, session) {
       inner_join(distinct(select_dpcmst(),mdc6cd),by='mdc6cd') %>% 
       mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
       select(-mdc6cd,-mdc6) %>% 
-      select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,starts_with('2'),desc(変更)) 
+      select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,starts_with('2'),変更)
       
   })
   

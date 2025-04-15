@@ -4,8 +4,8 @@ source('myfunc.R')
 
 ################################################################################
 ## global variables
-set_fy <- '2022'
-set_fys <- c('2018','2019','2020','2021','2022')
+set_fy <- '2023'
+set_fys <- c('2018','2019','2020','2021','2022','2023')
 
 ################################################################################
 ## global data
@@ -23,6 +23,11 @@ mst_hp <- dbGetQuery(con,statement = "SELECT * FROM mst_hp") %>% tibble()
 
 # dpcmstを読み込み
 dpcmst <- dbGetQuery(con,statement = "SELECT * FROM dpcmst") %>% tibble()
+
+mdc6cd_icd_with_time <- dbGetQuery(con,statement = 'SELECT * FROM mdc6cd_icd_with_time') %>% tibble()
+# mdc6cd_icd_with_time
+opecd_kcode_with_time <- dbGetQuery(con,statement = 'SELECT * FROM opecd_kcode_with_time') %>% tibble()
+# opecd_kcode_with_time
 
 dbDisconnect(con,shutdown = T)
 
@@ -48,14 +53,60 @@ color_palette <- setNames(colors,level_mdc2name)
 #############################################
 
 # test
+
+#############################################
+
 # input_hp <- '社会医療法人財団石心会　埼玉石心会病院'
 # 
 # mst_hp
 # 
 # select_area <- mst_area
+
+################################################################################
+
+# select_dpcmst <- dpcmst %>% 
+#   filter(mdc6cd=='010030')
 # 
-# select_dpcmst <- dpcmst
+# select_mdc6cd_icd_with_time <- mdc6cd_icd_with_time %>% 
+#   inner_join(distinct(select_dpcmst,mdc6cd),by='mdc6cd') %>% 
+#   mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
+#   select(-mdc6cd,-mdc6) %>% 
+#   select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,everything()) %>% 
+#   print()
 # 
+# select_mdc6cd_icd_with_time 
+# 
+# DT::datatable(
+#   data = select_mdc6cd_icd_with_time
+#   ,filter='top'
+#   ,selection='single'
+#   ,rownames=T
+#   ,options=list(
+#     pageLength= 15
+#   )
+# )
+# 
+# mydatatable(select_mdc6cd_icd_with_time)
+# 
+# select_opecd_kcode_with_time <- opecd_kcode_with_time %>% 
+#   inner_join(distinct(select_dpcmst,mdc6cd,opecd),by=c('mdc6cd','opecd')) %>% 
+#   mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
+#   select(-mdc6cd,-mdc6) %>% 
+#   select(DPC疾患分類,DPC手術分類=opecd,会計コード=kcode,会計名称=kname,everything()) %>% 
+#   print()
+# 
+# DT::datatable(
+#   data = select_opecd_kcode_with_time
+#   ,filter='top'
+#   ,selection='single'
+#   ,rownames=T
+#   ,options=list(
+#     pageLength= 15
+#   )
+# )
+
+################################################################################
+
 # select_hp <- get_select_hp(mst_hp,select_area)
 # select_hp
 # 
@@ -67,23 +118,23 @@ color_palette <- setNames(colors,level_mdc2name)
 # mdc2_table <- get_mdc2_table(select_mstno, select_hp, select_dpcmst)
 # mdc2_table
 # 
-# mdc2_table_focus <- mdc2_table %>% 
-#   filter(病院==input_hp) 
+# mdc2_table_focus <- mdc2_table %>%
+#   filter(病院==input_hp)
 # 
 # mdc2_table_focus
 # 
 # # mdc2_table_focusからswat分析グラフを作成
-# get_graph_mdc2_focus(mdc2_table_focus)
-# 
+# get_plotly_mdc2_focus(mdc2_table_focus, level_mdc2name, corlor_palette)
 # 
 # mdc6_table <- get_mdc6_table(select_mstno, select_hp, select_dpcmst)
 # mdc6_table
 # 
-# mdc6_table_focus <- mdc6_table %>% 
-#   filter(病院==input_hp) 
+# mdc6_table_focus <- mdc6_table %>%
+#   filter(病院==input_hp)
 # 
 # # mdc6_table_focusからswat分析グラフを作成
-# get_graph_mdc6_focus(mdc6_table_focus, select_dpcmst)
+# get_plotly_mdc6_focus(mdc6_table_focus, select_dpcmst,level_mdc2name,corlor_palette)
 # 
 # mdc10_table <- get_mdc10_table(select_mstno, select_hp, select_dpcmst)
 # mdc10_table
+

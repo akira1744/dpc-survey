@@ -10,12 +10,11 @@ ui <-
           width=2,
           selectInput(
             inputId='input_hp',
-            label=h4('注目病院を設定'),
+            label=h4('注目病院'),
             choices=list_hp,
             selected='全体'
           ),
-          hr(),
-          h4('比較対象地域を設定'),
+          h4('比較対象地域'),
           selectInput(
             inputId='input_tiho',
             label='地方',
@@ -40,6 +39,7 @@ ui <-
             choices=list_city,
             selected='全体'
           ),
+          actionButton("clear_area", "注目病院・地域選択をクリア", icon = icon("eraser"), class = "btn-light btn-sm"),
           hr(),
           h4('DPCで絞り込み'),
           selectInput(
@@ -60,6 +60,7 @@ ui <-
             choices=list_opename,
             selected='全体'
           ),
+          actionButton("clear_dpc", "DPC選択をクリア", icon = icon("eraser"), class = "btn-light btn-sm"),
           hr(style = "border: 1px solid gray;"),
           h4('データダウンロード'),
           downloadButton('download_data',label='Download'),
@@ -104,7 +105,7 @@ ui <-
               h3('概要'),
               p('本サイトは、DPC退院患者調査の結果を分析するためのサイトです。'),
               p('病院ごとDPCごとの年間退院患者数を比較することができます。'),
-              p('現在,2018年度~2022年度の5年間分のデータを格納しています。'),
+              p('現在,2018年度~2023年度の6年間分のデータを格納しています。'),
               
               h3('使用方法'),
               h4('Step1: サイドバーで注目病院を設定してください'),
@@ -122,6 +123,8 @@ ui <-
               p('・DPC手術分類別: DPC上6桁 + DPC手術分類ごとの実績'),
               
               h3('データソース'),
+              a('令和５年度DPC導入の影響評価に係る調査「退院患者調査」の結果報告について',href='https://www.mhlw.go.jp/stf/shingi2/newpage_00137.html'),
+              br(),
               a('令和４年度DPC導入の影響評価に係る調査「退院患者調査」の結果報告について',href='https://www.mhlw.go.jp/stf/shingi2/newpage_39119.html'),
               br(),
               a('令和３年度DPC導入の影響評価に係る調査「退院患者調査」の結果報告について',href='https://www.mhlw.go.jp/stf/shingi2/0000196043_00006.html'),
@@ -131,21 +134,23 @@ ui <-
               a('令和元年度DPC導入の影響評価に係る調査「退院患者調査」の結果報告について',href='https://www.mhlw.go.jp/stf/shingi2/0000196043_00004.html'),
               br(),
               a('平成30年度DPC導入の影響評価に係る調査「退院患者調査」の結果報告について',href='https://www.mhlw.go.jp/stf/shingi2/0000196043_00003.html'),
-              br(),
-              p('例年通りであれば、令和5年度(2023年度)のデータは2025年3月下旬に公開されます。公開され次第アプリに反映します。'),
-              
+
               h3('DPC退院患者調査データの注意点'),
               h4('DPC退院患者調査の退院患者数は、実際の退院患者よりも少ないです。'),
               p('・詳細は、「参考資料1:分析対象データ」、「参考資料2:集計条件について」をご参照ください。'),
-              a('・参考資料1:分析対象データ',href='https://www.mhlw.go.jp/content/12404000/001234082.pdf'),
+              a('・参考資料1:分析対象データ',href='https://www.mhlw.go.jp/content/12404000/001469141.pdf'),
               br(),
-              a('・参考資料2:集計条件について',href='https://www.mhlw.go.jp/content/12404000/001234080.pdf'),
+              a('・参考資料2:集計条件について',href='https://www.mhlw.go.jp/content/12404000/001468864.pdf'),
               
               h4('DPC退院患者調査に参加していない病院のデータは含まれていません。'),
-              p('DPC退院患者調査集計対象施設数は5922施設(2022年度)です。'),
+              # （１）分析対象データについてから施設数を算出
+              p('DPC退院患者調査集計対象施設数は6304施設(2023年度)です。'),
               p('DPCに該当しないケースは集計対象外です。'),
               p('主に急性期病院の実績データとして解釈してください。'),
               p('医療圏内シェア率は、あくまでDPC退院患者調査の範囲内でのシェア率を算出しておりますのでご注意ください。'),
+              
+              h4('経年比較する際はDPC定義の変更にご注意ください。'),
+              p('DPC定義の変更は「DPC病名マスタ」、「DPC手術分類マスタ」のタブで確認できます。'),
               
               h3('問い合わせ先'),
               HTML("
@@ -187,36 +192,16 @@ ui <-
               title='DPC手術分類別',
               DTOutput('dt_mdc10_table')
             ),
-
+            tabPanel(
+              title='DPC病名マスタ',
+              DTOutput('dt_select_mdc6cd_icd_with_time')
+            ),
+            tabPanel(
+              title='DPC手術分類マスタ',
+              DTOutput('dt_select_opecd_kcode_with_time')
+            )
           )
         )
       )
     ),
-    # tabPanel(
-    #   # Tab1
-    #   title='TabTitle2',
-    #   sidebarLayout(
-    #     # Tab1-sidebar
-    #     sidebarPanel(
-    #       width=2,
-    #       selectInput(
-    #         inputId='input2',
-    #         label='input2',
-    #         choices=c('近畿','関東'),
-    #         selected='近畿'
-    #       ),
-    #     ),
-    #     # Tab1-mainpanel
-    #     mainPanel(
-    #       width=10,
-    #       tabsetPanel(
-    #         type='tabs',
-    #         # Tab1-mainpanel-tabset1
-    #         tabPanel(
-    #           title='tabpanel2',
-    #         )
-    #       )
-    #     )
-    #   )
-    # ),
   )

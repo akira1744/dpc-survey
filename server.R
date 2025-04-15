@@ -1,46 +1,64 @@
 server <- function(input, output, session) {
 
-  # # 検証用
+  # # # 検証用
   # output$dt_mst_pref_tiho <- renderDT(mydatatable(mst_pref_tiho))
   # output$dt_mst_area <- renderDT(mydatatable(mst_area))
   # output$dt_mst_hp <- renderDT(mydatatable(mst_hp))
   # output$dt_dpcmst <- renderDT(mydatatable(dpcmst))
   
+  # 地域選択クリアボタン
+  observeEvent(input$clear_area, {
+    updateSelectInput(session, 'input_hp', selected = '')
+    updateSelectInput(session, 'input_tiho', selected = '全体')
+    updateSelectInput(session, 'input_pref', selected = '全体')
+    updateSelectInput(session, 'input_iryo', selected = '全体')
+    updateSelectInput(session, 'input_city', selected = '全体')
+  })
+  
+  # 地域選択クリアボタン
+  observeEvent(input$clear_dpc, {
+    updateSelectInput(session, 'input_mdc2name', selected = '全体')
+    updateSelectInput(session, 'input_mdc6name', selected = '全体')
+    updateSelectInput(session, 'input_opename', selected = '全体')
+  })
+  
   ##############################################################################
   # areaのsidebar処理
   ##############################################################################
   
+
   # input_hpが更新された時,input_tihoとinput_prefとinput_iryoを更新
+  # observeEvent(input$input_hp,{
   observeEvent(input$input_hp,{
+    
     if (input$input_hp != '') {
-      select_hp_focus  <- select_hp() %>% 
+      
+      select_hp_focus <- mst_hp %>% 
         filter(病院 == input$input_hp) 
-      updateSelectInput(session, 'input_tiho',selected=select_hp_focus$地方)
-      updateSelectInput(session, 'input_pref',selected=select_hp_focus$都道府県)
+      
+      focus_hp_tiho <- mst_area %>%
+        filter(都道府県 == select_hp_focus$都道府県) %>%
+        pull(地方) %>% 
+        unique()
+      
+
+      focus_hp_pref <- select_hp_focus$都道府県
+      focus_hp_iryo <- select_hp_focus$医療圏
+      focus_hp_city <- select_hp_focus$市町村
+
+      updateSelectInput(session, 'input_tiho',choices=c('全体',focus_hp_tiho),selected=focus_hp_tiho)
+      updateSelectInput(session, 'input_pref',choices=c('全体',focus_hp_pref),selected=focus_hp_pref)
+      updateSelectInput(session, 'input_iryo',choices=c('全体',focus_hp_iryo),selected=focus_hp_iryo)
+      updateSelectInput(session, 'input_city',choices=c('全体',focus_hp_city),selected=focus_hp_city)
+    } else{
+      updateSelectInput(session, 'input_tiho',choices=list_tiho,selected='全体')
+      updateSelectInput(session, 'input_pref',choices=list_pref,selected='全体')
+      updateSelectInput(session, 'input_iryo',choices=list_iryo,selected='全体')
+      updateSelectInput(session, 'input_city',choices=list_city,selected='全体')
     }
   })
   
-  
-  # input_tihoが更新された時,都道府県,医療圏,市町村を全体に戻す
-  observeEvent(input$input_tiho,{
-    updateSelectInput(session, 'input_pref',selected='全体')
-    updateSelectInput(session, 'input_iryo',selected='全体')
-    updateSelectInput(session, 'input_city',selected='全体')
-  })
-  
-  # input_prefが更新された時,医療圏,市町村を全体に戻す
-  observeEvent(input$input_pref,{
-    updateSelectInput(session, 'input_iryo',selected='全体')
-    updateSelectInput(session, 'input_city',selected='全体')
-  })
-  
-  # input_iryoが更新された時,市町村を全体に戻す
-  observeEvent(input$input_iryo,{
-    updateSelectInput(session, 'input_city',selected='全体')
-  })
-  
-  #########################################################################
-  
+  ##############################################################################
   
   # サイドバーの地方から絞り込み
   select_tiho <- reactive({
@@ -51,14 +69,26 @@ server <- function(input, output, session) {
   })
   
   # select_tihoが更新された時,list_prefsを更新
-  observe({
-    list_pref <- unique(select_tiho()$都道府県) %>% c('全体',.)
-    updateSelectInput(
-      session, 'input_pref',
-      choices=list_pref,
-      selected=input$input_pref
-    )
+  observeEvent(input$input_tiho,{
+    
+    # prefのselectedの制御
+    if(input$input_tiho == '全体'){
+      updateSelectInput(
+        session, 'input_pref',
+        selected='全体'
+      )
+    }
+    
+    # prefのchoicesの制御
+    if(input$input_tiho != '全体' & input$input_hp==''){
+      updateSelectInput(
+        session, 'input_pref',
+        choices=unique(select_tiho()$都道府県) %>% c('全体',.)
+      )
+    }
   })
+  
+  ##############################################################################
   
   # サイドバーの都道府県から絞り込み
   select_pref <- reactive({
@@ -68,16 +98,27 @@ server <- function(input, output, session) {
     )
   })
   
-  # select_prefが更新された時,list_iryoを更新
-  observe({
-    list_iryo <- unique(select_pref()$医療圏) %>% c('全体',.)
-    updateSelectInput(
-      session,
-      'input_iryo',
-      choices=list_iryo,
-      selected=input$input_iryo
-    )
+  # select_tihoが更新された時,list_prefsを更新
+  observeEvent(input$input_pref,{
+    
+    # prefのselectedの制御
+    if(input$input_pref == '全体'){
+      updateSelectInput(
+        session, 'input_iryo',
+        selected='全体'
+      )
+    }
+    
+    # prefのchoicesの制御
+    if(input$input_pref != '全体' & input$input_hp==''){
+      updateSelectInput(
+        session, 'input_iryo',
+        choices=unique(select_pref()$医療圏) %>% c('全体',.)
+      )
+    }
   })
+  
+  ##############################################################################
   
   # サイドバーの医療圏から絞り込み
   select_iryo <- reactive({
@@ -87,16 +128,27 @@ server <- function(input, output, session) {
     )
   })
   
-  # select_iryoが更新された時,list_cityを更新
-  observe({
-    list_city <- unique(select_iryo()$市町村) %>% c('全体',.)
-    updateSelectInput(
-      session,
-      'input_city',
-      choices=list_city,
-      selected=input$input_city
-    )
+  # select_tihoが更新された時,list_prefsを更新
+  observeEvent(input$input_iryo,{
+    
+    # prefのselectedの制御
+    if(input$input_iryo == '全体'){
+      updateSelectInput(
+        session, 'input_city',
+        selected='全体'
+      )
+    }
+    
+    # prefのchoicesの制御
+    if(input$input_iryo != '全体' & input$input_hp==''){
+      updateSelectInput(
+        session, 'input_city',
+        choices=unique(select_iryo()$市町村) %>% c('全体',.)
+      )
+    }
   })
+  
+################################################################################
   
   # サイドバーの市町村から絞り込み
   select_area <- reactive({
@@ -106,10 +158,9 @@ server <- function(input, output, session) {
     )
   })
   
-  # # 検証用
-  # output$dt_select_area<- renderDT(mydatatable(select_city()))
+  # # # 検証用
+  # output$dt_select_area<- renderDT(mydatatable(select_area()))
 
-    
   ##############################################################################
   # select_hpとselect_mstnoを取得
   ##############################################################################
@@ -132,8 +183,7 @@ server <- function(input, output, session) {
       selected=input$input_hp
     )
   })
-  
-  
+
   ##############################################################################
   # dpcmstのsidebar処理
   ##############################################################################
@@ -196,8 +246,8 @@ server <- function(input, output, session) {
     )
   })
   
-  # # 検証用
-  # output$dt_select_dpcmst<- renderDT(mydatatable(select_dpcmst()))
+  # # # 検証用
+  output$dt_select_dpcmst<- renderDT(mydatatable(select_dpcmst()))
   
 
   
@@ -333,6 +383,53 @@ server <- function(input, output, session) {
   output$plotly_mdc10_focus <- renderPlotly({
     get_plotly_mdc10_focus(mdc10_table_focus(), select_dpcmst(), level_mdc2name, corlor_palette)
   })
+
+  ##############################################################################
+  
+  # DPC病名-ICD10マスタ
+  select_mdc6cd_icd_with_time <- reactive({
+    mdc6cd_icd_with_time %>% 
+      inner_join(distinct(select_dpcmst(),mdc6cd),by='mdc6cd') %>% 
+      mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
+      select(-mdc6cd,-mdc6) %>% 
+      select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,starts_with('2'),変更)
+  })
+  
+  output$dt_select_mdc6cd_icd_with_time <- renderDT(
+    DT::datatable(
+      data = select_mdc6cd_icd_with_time()
+      ,filter='top'
+      ,selection='single'
+      # ,rownames=T
+      ,options=list(
+        pageLength= 15
+      )
+    )
+  )
+  
+  ##############################################################################
+  
+  # DPC手術-会計マスタ
+  select_opecd_kcode_with_time <- reactive({
+    opecd_kcode_with_time %>% 
+      inner_join(distinct(select_dpcmst(),mdc6cd,opecd),by=c('mdc6cd',`2022`='opecd')) %>% 
+      mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
+      select(-mdc6cd,-mdc6) %>% 
+      select(DPC疾患分類,会計コード=kcode,会計名称=kname,starts_with('2'),変更) %>%  
+      arrange(DPC疾患分類,会計コード,desc(`2022`),desc(`2020`),desc(`2018`),変更)
+  })
+  
+  output$dt_select_opecd_kcode_with_time <- renderDT(
+    DT::datatable(
+      data = select_opecd_kcode_with_time()
+      ,filter='top'
+      ,selection='single'
+      # ,rownames=T
+      ,options=list(
+        pageLength= 15
+      )
+    )
+  )
   
   ##############################################################################
   

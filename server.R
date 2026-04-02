@@ -276,7 +276,7 @@ server <- function(input, output, session) {
   output$dt_hp_table <- renderDT(
     mydatatable(
       hp_table(),
-      pctcol=c('医療圏内シェア','救急医療','予定外','救急車率'),
+      pctcol=c('医療圏内シェア','予定入院','救急医療','救急車率'),
       select_hpname = input$input_hp
     )
   )
@@ -319,7 +319,7 @@ server <- function(input, output, session) {
   output$dt_mdc2_table_focus <- renderDT(
     mydatatable(
       mdc2_table_focus(),
-      pctcol=c('医療圏内シェア','救急医療','予定外','救急車率'),
+      pctcol=c('医療圏内シェア','予定入院','救急医療','救急車率'),
       select_hpname = input$input_hp,
     )
   )
@@ -357,7 +357,7 @@ server <- function(input, output, session) {
   output$dt_mdc2_table <- renderDT(
     mydatatable(
       mdc2_table(),
-      pctcol=c('医療圏内シェア','救急医療','予定外','救急車率'),
+      pctcol=c('医療圏内シェア','予定入院','救急医療','救急車率'),
       select_hpname = input$input_hp
     )
   )
@@ -579,7 +579,8 @@ server <- function(input, output, session) {
       inner_join(distinct(select_dpcmst(),mdc6cd),by='mdc6cd') %>% 
       mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
       select(-mdc6cd,-mdc6) %>% 
-      select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,starts_with('2'),変更)
+      select(DPC疾患分類,ICD10=icd,ICD10病名=icdname,starts_with('2'),変更) %>% 
+      arrange(desc(`2024`),desc(`2022`),desc(`2020`),desc(`2018`),ICD10,ICD10病名)
       
   })
   
@@ -603,6 +604,10 @@ server <- function(input, output, session) {
       columns='2022',valueColumns='2022'
       ,color=styleEqual(levels=c(0,1),values=c('black','red'))
     ) %>% 
+    formatStyle(
+      columns='2024',valueColumns='2024'
+      ,color=styleEqual(levels=c(0,1),values=c('black','red'))
+      ) %>% 
     formatStyle(
       columns='変更',valueColumns='変更'
       ,color=styleEqual(levels=c('変更なし','変更あり'),values=c('black','red'))
@@ -630,13 +635,15 @@ server <- function(input, output, session) {
         `2018` %in% select_opecd
         | `2020` %in% select_opecd
         | `2022` %in% select_opecd
+        | `2024` %in% select_opecd
       ) %>% 
       mutate(DPC疾患分類=str_glue('{mdc6cd}:{mdc6}')) %>%
       select(-mdc6cd,-mdc6) %>% 
+      mutate(F2024 = if_else(`2024` == side_opecd,1,0)) %>% 
       mutate(F2022 = if_else(`2022` == side_opecd,1,0)) %>% 
       mutate(F2020 = if_else(`2020` == side_opecd,1,0)) %>% 
       mutate(F2018 = if_else(`2018` == side_opecd,1,0)) %>% 
-      arrange(DPC疾患分類,desc(F2022),desc(F2020),desc(F2018),`2022`,`2020`,`2018`,desc(変更),kcode) %>% 
+      arrange(DPC疾患分類,desc(F2024),desc(F2022),desc(F2020),desc(F2018),`2024`,`2022`,`2020`,`2018`,desc(変更),kcode) %>% 
       select(DPC疾患分類,会計コード=kcode,会計名称=kname,starts_with('2'),変更,starts_with('F'))  
   })
   
@@ -647,9 +654,13 @@ server <- function(input, output, session) {
       ,selection='single'
       ,options=list(
         pageLength= 15
-        ,columnDefs=list(list(targets=c(8,9,10),visible=FALSE))
+        ,columnDefs=list(list(targets=c(9,10,11,12),visible=FALSE))
       )
     ) %>% 
+    formatStyle(
+      columns='2024',valueColumns = 'F2024'
+      ,color=styleInterval(cuts=0,values=c('black','red')) # 0以下は黒,0より大きいものは赤
+      ) %>% 
     formatStyle(
       columns='2022',valueColumns = 'F2022'
       ,color=styleInterval(cuts=0,values=c('black','red')) # 0以下は黒,0より大きいものは赤

@@ -189,7 +189,7 @@ create_hp_table <- function(agg_wide_hp, select_hp,set_fys,set_fy){
     select(
       都道府県,医療圏,市町村,病院,
       any_of(set_fys),
-      県内ランク,医療圏内シェア,救急医療,予定外,救急車率,平均日数,
+      県内ランク,医療圏内シェア,予定入院,救急医療,救急車率,平均日数,
       DPC病床
     ) %>% 
     arrange(desc(!!sym(set_fy))) 
@@ -253,7 +253,7 @@ create_mdc2_table <- function(agg_wide_mdc2, select_hp,select_dpcmst,set_fys,set
       都道府県,医療圏,市町村,病院,
       DPC大分類 = mdc2name,
       any_of(set_fys),
-      県内ランク,医療圏内シェア,救急医療,予定外,救急車率,
+      県内ランク,医療圏内シェア,予定入院,救急医療,救急車率,
       DPC病床
     ) %>% 
     arrange(desc(!!sym(set_fy))) 
